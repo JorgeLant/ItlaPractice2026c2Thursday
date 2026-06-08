@@ -1,0 +1,6 @@
+@Gestor_de_Datos_Oficina_Legal_HostAddress = http://localhost:5070
+
+GET {{Gestor_de_Datos_Oficina_Legal_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
