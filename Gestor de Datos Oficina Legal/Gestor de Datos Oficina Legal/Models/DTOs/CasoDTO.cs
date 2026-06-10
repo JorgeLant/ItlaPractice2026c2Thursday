@@ -1,6 +1,6 @@
-﻿namespace Gestor_de_Datos_Oficina_Legal.Controllers.Models.Entities
+﻿namespace Gestor_de_Datos_Oficina_Legal.Models.DTOs
 {
-    public class Caso
+    public class CasoDTO
     {
         public int Id { get; set; }
         public string NumeroExpediente { get; set; }
