@@ -1,6 +1,6 @@
-﻿namespace Gestor_de_Datos_Oficina_Legal.Controllers.Models.Entities
+﻿namespace Gestor_de_Datos_Oficina_Legal.Models.DTOs
 {
-    public class Audiencia
+    public class AudienciaDTO
     {
         public int Id { get; set; }
         public int CasoAsociado { get; set; }
