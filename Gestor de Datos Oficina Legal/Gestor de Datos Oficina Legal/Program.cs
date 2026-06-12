@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.EntityFrameworkCore;
+using Gestor_de_Datos_Oficina_Legal.Contexts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +9,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+var connectionString =
+    builder.Configuration.GetConnectionString("GestorCasosDb")
+    ?? throw new InvalidOperationException(
+        "No se encontró la cadena de conexión GestorCasosDb."
+    );
+
+builder.Services.AddDbContext<ConexionDB>(options =>
+    options.UseSqlServer(connectionString));
 
 var app = builder.Build();
 

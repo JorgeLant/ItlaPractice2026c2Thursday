@@ -1,6 +1,8 @@
-﻿using Gestor_de_Datos_Oficina_Legal.Models.DTOs;
+﻿using Gestor_de_Datos_Oficina_Legal.Contexts;
+using Gestor_de_Datos_Oficina_Legal.Models.DTOs;
 using Gestor_de_Datos_Oficina_Legal.Models.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Gestor_de_Datos_Oficina_Legal.Controllers
 {
@@ -8,25 +10,27 @@ namespace Gestor_de_Datos_Oficina_Legal.Controllers
     [Route("api/[controller]")]
     public class ClienteController : ControllerBase
     {
-        private static readonly List<Cliente> clientes = new List<Cliente>()
+        private readonly ConexionDB _context;
+
+        public ClienteController(ConexionDB context)
         {
-            new Cliente {Id = 1, Nombre = "Adrian Rojas", Cedula = "001-0000001-1",NumeroTelefonico = "809-000-0001", CorreoElectronico = "Adrianrojas@gmail.com", Direccion = "Av. Monumental, Distrito Nacional, Santo Domingo",TipoCliente = "Persona fisica", FechaRegistro = new DateTime(2025,08,14), Estado = "Activo"},
-            new Cliente {Id = 2, Nombre = "Axel Vasquez", Cedula = "001-0000002-1",NumeroTelefonico = "829-000-0001", CorreoElectronico = "Axelvasquez@gmail.com", Direccion = "Los Alcarrizos, Santo Domingo",TipoCliente = "Persona fisica", FechaRegistro = new DateTime(2020,03,28), Estado = "Inactivo"},
-            new Cliente {Id = 3, Nombre = "Carlos Fernandez", Cedula = "001-0000003-1",NumeroTelefonico = "849-000-0001", CorreoElectronico = "Carlosfernandez@gmail.com", Direccion = "Av. Republica de Colombia, Distrito Nacional, Santo Domingo",TipoCliente = "Persona fisica", FechaRegistro = new DateTime(2018,10,04), Estado = "Activo"}
-        };
+            
+            _context = context;
+        }
 
         [HttpGet]
         [Route("Get-Clientes")]
-        public ActionResult<IEnumerable<Cliente>> GetCliente()
+        public async Task<ActionResult<IEnumerable<Cliente>>> GetCliente()
         {
-            return Ok(clientes);
+            var cliente = await _context.Clientes.AsNoTracking().ToListAsync();
+            return Ok(_context.Clientes);
         }
 
         [HttpGet]
         [Route("GetId-Clientes")]
         public ActionResult<Cliente> GetByIdCliente(int id)
         {
-            var cliente = clientes.FirstOrDefault(x => x.Id == id);
+            var cliente = _context.Clientes.FirstOrDefault(x => x.Id == id);
             if (cliente == null)
             {
                 return NotFound();
@@ -36,11 +40,11 @@ namespace Gestor_de_Datos_Oficina_Legal.Controllers
 
         [HttpPost]
         [Route("Post-Clientes")]
-        public ActionResult<Cliente> CreateCliente(ClienteDTO request)
+        public async Task<ActionResult<Cliente>> CreateCliente(ClienteDTO request)
         {
             var cliente = new Cliente()
             {
-                Id = request.Id,
+
                 Nombre = request.Nombre,
                 Cedula = request.Cedula,
                 NumeroTelefonico= request.NumeroTelefonico,
@@ -50,16 +54,17 @@ namespace Gestor_de_Datos_Oficina_Legal.Controllers
                 FechaRegistro= request.FechaRegistro,
                 Estado = request.Estado
             };
-            cliente.Id = clientes.Max(x => x.Id) + 1;
-            clientes.Add(cliente);
+
+            _context.Clientes.Add(cliente);
+            await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetByIdCliente), new { id = cliente.Id }, cliente);
         }
 
         [HttpPut]
         [Route("PutId-Clientes")]
-        public ActionResult Update(int id, Cliente updatedCliente)
+        public async Task<ActionResult> Update(int id, Cliente updatedCliente)
         {
-            var cliente = clientes.FirstOrDefault(x => x.Id == id);
+            var cliente = _context.Clientes.FirstOrDefault(x => x.Id == id);
             if (cliente == null)
             {
                 return NotFound();
@@ -67,19 +72,21 @@ namespace Gestor_de_Datos_Oficina_Legal.Controllers
             cliente.CorreoElectronico = updatedCliente.CorreoElectronico;
             cliente.NumeroTelefonico = updatedCliente.NumeroTelefonico;
             cliente.Direccion = updatedCliente.Direccion;
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 
         [HttpDelete]
         [Route("Delete-Clientes")]
-        public ActionResult Delete(int id)
+        public async Task<ActionResult> Delete(int id)
         {
-            var cliente = clientes.FirstOrDefault(x => x.Id == id);
+            var cliente = _context.Clientes.FirstOrDefault(x => x.Id == id);
             if (cliente == null)
             {
                 return NotFound();
             }
-            clientes.Remove(cliente);
+            _context.Clientes.Remove(cliente);
+            await _context.SaveChangesAsync();
             return NoContent();
         }
     }

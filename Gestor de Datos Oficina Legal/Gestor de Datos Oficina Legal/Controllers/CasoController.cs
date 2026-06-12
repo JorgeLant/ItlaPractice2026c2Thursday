@@ -1,6 +1,8 @@
-﻿using Gestor_de_Datos_Oficina_Legal.Models.DTOs;
+﻿using Gestor_de_Datos_Oficina_Legal.Contexts;
+using Gestor_de_Datos_Oficina_Legal.Models.DTOs;
 using Gestor_de_Datos_Oficina_Legal.Models.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Gestor_de_Datos_Oficina_Legal.Controllers
 {
@@ -8,18 +10,19 @@ namespace Gestor_de_Datos_Oficina_Legal.Controllers
     [Route("api/[controller]")]
     public class CasoController: ControllerBase
     {
-        private static readonly List<Caso> casos = new List<Caso>
+        private readonly ConexionDB _context;
+
+        public CasoController(ConexionDB context)
         {
-            new Caso {Id = 1, NumeroExpediente = "001-0001", ClienteAsociado = 2, AbogadoAsociado = 3, Titulo = "Demanda por incumplimiento de contrato", TipoCaso = "Civil", Descripcion = "El presunto caballero....", FechaApertura = new DateTime(2021,06,09), Tribunal = "Edificio Suprema Corte de Justicia", ParteContraria = "No definida", Estado = "Suspendido"},
-            new Caso {Id = 2, NumeroExpediente = "001-0002", ClienteAsociado = 3, AbogadoAsociado = 1, Titulo = "Reclamación por despido injustificado", TipoCaso = "Laboral", Descripcion = "El presunto caballero....", FechaApertura = new DateTime(2023,06,09), Tribunal = "Palacio de justicia de Santiago", ParteContraria = "No definida", Estado = "Cerrado"},
-            new Caso {Id = 3, NumeroExpediente = "001-0003", ClienteAsociado = 1, AbogadoAsociado = 2, Titulo = "Querella por robo agravado", TipoCaso = "Penal", Descripcion = "El presunto caballero....", FechaApertura = new DateTime(2024,09,11), Tribunal = "Palacio de Justicia de la Provincia Santo Domingo", ParteContraria = "No definida", Estado = "Activo"}
-        };
+            _context = context;
+        }
 
         [HttpGet]
         [Route("Get-Casos")]
-        public ActionResult<IEnumerable<Caso>> GetCaso()
+        public async Task<ActionResult<IEnumerable<Caso>>> GetCaso()
         {
-            return Ok(casos);
+            var caso = await _context.Casos.AsNoTracking().ToListAsync();
+            return Ok(_context.Casos);
         }
 
         [HttpGet]
@@ -27,7 +30,7 @@ namespace Gestor_de_Datos_Oficina_Legal.Controllers
 
         public ActionResult<Caso> GetByIdCaso(int id)
         {
-            var caso = casos.FirstOrDefault(x => x.Id == id);
+            var caso = _context.Casos.FirstOrDefault(x => x.Id == id);
             if (caso == null)
             {
                 return NotFound();
@@ -37,11 +40,10 @@ namespace Gestor_de_Datos_Oficina_Legal.Controllers
 
         [HttpPost]
         [Route("Post-Casos")]
-        public ActionResult<Caso> CreateCaso(CasoDTO request)
+        public async Task<ActionResult<Caso>> CreateCaso(CasoDTO request)
         {
             var caso = new Caso
             {
-                Id = request.Id,
                 NumeroExpediente = request.NumeroExpediente,
                 ClienteAsociado = request.ClienteAsociado,
                 AbogadoAsociado = request.AbogadoAsociado,
@@ -53,17 +55,18 @@ namespace Gestor_de_Datos_Oficina_Legal.Controllers
                 ParteContraria = request.ParteContraria,
                 Estado = request.Estado
             };
-            caso.Id = casos.Max(x => x.Id) + 1;
-            casos.Add(caso);
+
+            _context.Casos.Add(caso);
+            await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetByIdCaso), new { id = caso.Id }, caso);
         }
 
         [HttpPut]
         [Route("PutID-Caso")]
 
-        public ActionResult Update(int id, Caso updatedCaso)
+        public async Task<ActionResult> Update(int id, Caso updatedCaso)
         {
-            var caso = casos.FirstOrDefault(x => x.Id == id);
+            var caso = _context.Casos.FirstOrDefault(x => x.Id == id);
             if (caso == null)
             {
                 return NotFound();
@@ -72,20 +75,22 @@ namespace Gestor_de_Datos_Oficina_Legal.Controllers
             caso.Estado = updatedCaso.Estado;
             caso.FechaApertura = updatedCaso.FechaApertura;
             caso.Tribunal = updatedCaso.Tribunal;
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 
         [HttpDelete]
         [Route("Delete-Caso")]
 
-        public ActionResult DeleteC(int id)
+        public async Task<ActionResult> DeleteC(int id)
         {
-            var caso = casos.FirstOrDefault(x => x.Id == id);
+            var caso = _context.Casos.FirstOrDefault(x => x.Id == id);
             if (caso == null)
             {
                 return NotFound();
             }
-            casos.Remove(caso);
+            _context.Casos.Remove(caso);
+            await _context.SaveChangesAsync();
             return NoContent();
         }
     }
